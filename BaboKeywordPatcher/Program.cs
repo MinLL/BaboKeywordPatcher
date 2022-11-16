@@ -52,7 +52,14 @@ namespace BaboKeywordPatcher
         public static void LoadKeywords(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             SLA_ArmorHarness = LoadKeyword(state, "SLA_ArmorHarness");
-            SLA_ArmorSpendex = LoadKeyword(state, "SLA_ArmorSpendex");
+            try // SLAX vs SLA Babo spell this keyword differently. Check for both.
+            {
+                SLA_ArmorSpendex = LoadKeyword(state, "SLA_ArmorSpendex");
+            }
+            catch
+            {
+                SLA_ArmorSpendex = LoadKeyword(state, "SLA_ArmorSpandex");
+            }
             SLA_ArmorTransparent = LoadKeyword(state, "SLA_ArmorTransparent");
             SLA_BootsHeels = LoadKeyword(state, "SLA_BootsHeels");
             SLA_VaginalDildo = LoadKeyword(state, "SLA_VaginalDildo");
