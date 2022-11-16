@@ -88,12 +88,14 @@ namespace BaboKeywordPatcher
         }
 
         // Keywords are static / nullabe, but are initialized on runtime. Ignore warning.
-        #pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8604 // Possible null reference argument.
         public static void ParseName(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, IArmorGetter armor, String name)
         {
             bool matched = false;
-            var armorEditObj = state.PatchMod.Armors.GetOrAddAsOverride(armor);
-            if (armorEditObj == null )
+            //var armorEditObj = state.PatchMod.Armors.GetOrAddAsOverride(armor);
+            var armorEditObj = armor.DeepCopy();
+
+            if (armorEditObj == null)
             {
                 System.Console.WriteLine("Armor is null for " + name);
                 return;
@@ -164,9 +166,10 @@ namespace BaboKeywordPatcher
             if (matched)
             {
                 // System.Console.WriteLine("Matched: " + name);
+                state.PatchMod.Armors.Set(armorEditObj);
             }
         }
-        #pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604 // Possible null reference argument.
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
@@ -174,8 +177,29 @@ namespace BaboKeywordPatcher
             LoadKeywords(state);
             foreach (var armorGetter in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorGetter>())
             {
-                try 
+                try
                 {
+                    // skip armor with non-default race
+                    if (armorGetter.Race != null)
+                    {
+                        armorGetter.Race.TryResolve<IRaceGetter>(state.LinkCache, out var race);
+                        if (race != null && race.EditorID != "DefaultRace") continue;
+                    }
+                    // skip armor that is non-playable or a shield
+                    if (armorGetter.MajorFlags.HasFlag(Armor.MajorFlag.NonPlayable)) continue;
+                    if (armorGetter.MajorFlags.HasFlag(Armor.MajorFlag.Shield)) continue;
+                    // skip armor that is head, hair, circlet, hands, feet, rings, or amulets
+                    if (armorGetter.BodyTemplate != null)
+                    {
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Head)) continue;
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Hair)) continue;
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Circlet)) continue;
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Hands)) continue;
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Ring)) continue;
+                        if (armorGetter.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Amulet)) continue;
+                    }
+                    if (armorGetter.Keywords == null) continue;
+
                     if (armorGetter.Name != null)
                     {
                         string? v = armorGetter.Name.ToString();
