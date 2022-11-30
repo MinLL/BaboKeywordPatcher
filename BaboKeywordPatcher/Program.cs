@@ -11,6 +11,7 @@ namespace BaboKeywordPatcher
     public class BaboSettings
     {
         public bool ArmorPrettyDefault;
+        public bool ArmorEroticDefault;
         public bool EroticDresses;
     }
     
@@ -77,6 +78,7 @@ namespace BaboKeywordPatcher
         public static IKeywordGetter? SLA_HasLeggings;
         public static IKeywordGetter? SLA_HasStockings;
         public static IKeywordGetter? SLA_MiniSkirt;
+        public static IKeywordGetter? SLA_ArmorHalfNakedBikini;
 
         public static void LoadKeywords(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
@@ -115,6 +117,7 @@ namespace BaboKeywordPatcher
             SLA_HasLeggings = LoadKeyword(state, "SLA_HasLeggings");
             SLA_HasStockings = LoadKeyword(state, "SLA_HasStockings");
             SLA_MiniSkirt = LoadKeyword(state, "SLA_MiniSkirt");
+            SLA_ArmorHalfNakedBikini = LoadKeyword(state, "SLA_ArmorHalfNakedBikini");
         }
 
         private static void AddTag(Armor AEO, IKeywordGetter tag)
@@ -251,8 +254,13 @@ namespace BaboKeywordPatcher
                 matched = true;
                 AddTag(armorEditObj, SLA_BraArmor);
             }
+            if (StrMatch(name, "bikini"))
+            {
+                matched = true;
+                AddTag(armorEditObj, SLA_ArmorHalfNakedBikini);
+            }
             // SLA_ThongT
-            if (StrMatch(name, "thong"))
+            if (StrMatch(name, "thong") || StrMatch(name, "bottom"))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ThongT);
@@ -287,6 +295,11 @@ namespace BaboKeywordPatcher
             { // I use a skimpy armor replacer (But not to the level of bikini). Having ArmorPretty on all armors is appropriate.
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorPretty);
+            }
+            else if (Settings.Value.ArmorEroticDefault && !matched && (StrMatch(name, "armor") || StrMatch(name, "cuiras") || StrMatch(name, "robes")))
+            { 
+                matched = true;
+                AddTag(armorEditObj, EroticArmor);
             }
             if (matched)
             {
