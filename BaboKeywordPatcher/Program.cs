@@ -5,6 +5,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace BaboKeywordPatcher
 {
@@ -42,9 +43,20 @@ namespace BaboKeywordPatcher
             return ReturnKwd;
         }
 
-        public static bool StrMatch(String name, String comparator)
+        public static bool StrMatch(String name, String comparator, bool isPart)
         {
-            return (name.IndexOf(comparator, StringComparison.OrdinalIgnoreCase) >= 0);
+            bool matched;
+
+            if(isPart)
+            {
+                matched = (name.IndexOf(comparator, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+            else
+            {
+                matched = Regex.IsMatch(name, (@"\b" + comparator + @"\b"), RegexOptions.IgnoreCase);
+            }
+
+            return matched;
         }
 
         public static bool StrMatchCS(String name, String comparator)
@@ -54,7 +66,7 @@ namespace BaboKeywordPatcher
 
         public static bool IsDeviousRenderedItem(String name)
         {
-            return (StrMatch(name, "scriptinstance") || StrMatch(name, "rendered"));
+            return (StrMatch(name, "scriptinstance", true) || StrMatch(name, "rendered", true));
         }
 
         public static IKeywordGetter? EroticArmor;
@@ -139,7 +151,7 @@ namespace BaboKeywordPatcher
 
         // Keywords are static / nullabe, but are initialized on runtime. Ignore warning.
 #pragma warning disable CS8604 // Possible null reference argument.
-        public static void ParseName(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, IArmorGetter armor, String name)
+        public static void ParseName(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, IArmorGetter armor, String name, bool isPart)
         {
             bool matched = false;
             //var armorEditObj = state.PatchMod.Armors.GetOrAddAsOverride(armor);
@@ -150,11 +162,18 @@ namespace BaboKeywordPatcher
                 System.Console.WriteLine("Armor is null for " + name);
                 return;
             }
-            // EroticArmor
-            if (StrMatch(name, "harness") || StrMatch(name, "corset") || StrMatch(name, "StraitJacket") || 
-                StrMatch(name, "hobble") || StrMatch(name, "tentacles") || 
-                StrMatch(name, "slave") || StrMatch(name, "chastity") || StrMatch(name, "cuff") || StrMatch(name, "binder") ||
-                StrMatch(name, "yoke") || StrMatch(name, "mitten")
+            // SLA_ArmorBondage
+            if (StrMatch(name, "harness", isPart)
+                    || StrMatch(name, "corset", isPart)
+                    || StrMatch(name, "StraitJacket", isPart)
+                    || StrMatch(name, "hobble", isPart)
+                    || StrMatch(name, "tentacles", isPart)
+                    || StrMatch(name, "slave", isPart)
+                    || StrMatch(name, "chastity", isPart)
+                    || StrMatch(name, "cuff", isPart)
+                    || StrMatch(name, "binder", isPart)
+                    || StrMatch(name, "yoke", isPart)
+                    || StrMatch(name, "mitten", isPart)
                 )
             {
                 matched = true;
@@ -162,53 +181,53 @@ namespace BaboKeywordPatcher
             }
 
             // EroticArmor
-            if (StrMatch(name, "suit") ||  StrMatch(name, "latex") || StrMatch(name, "rubber") ||
-                StrMatch(name, "ebonite") || StrMatch(name, "slut") || StrMatch(name, "lingerie") ||
-                (StrMatch(name, "dress") && Settings.Value.EroticDresses)
+            if (StrMatch(name, "suit", isPart) ||  StrMatch(name, "latex", isPart) || StrMatch(name, "rubber", isPart) ||
+                StrMatch(name, "ebonite", isPart) || StrMatch(name, "slut", isPart) || StrMatch(name, "lingerie", isPart) ||
+                (StrMatch(name, "dress", isPart) && Settings.Value.EroticDresses)
                 )
             {
                 matched = true;
                 AddTag(armorEditObj, EroticArmor);
             }
             // SLA_ArmorRubber
-            if (StrMatch(name, "rubber"))
+            if (StrMatch(name, "rubber", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorRubber);
             }
 
             //SLA_ArmorHarness
-            if (StrMatch(name, "harness"))
+            if (StrMatch(name, "harness", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorHarness);
             }
             // SLA_ArmorSpendex
-            if (StrMatch(name, "suit") || StrMatch(name, "spandex") || StrMatch(name, "spendex") || StrMatch(name, "ebonite"))
+            if (StrMatch(name, "suit", isPart) || StrMatch(name, "spandex", isPart) || StrMatch(name, "spendex", isPart) || StrMatch(name, "ebonite", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorSpendex);
             }
             // SLA_ArmorTransparent
-            if (StrMatch(name, "transparent") || StrMatchCS(name, "TR"))
+            if (StrMatch(name, "transparent", isPart) || StrMatchCS(name, "TR"))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorTransparent);
             }
             // SLA_BootsHeels
             IBodyTemplateGetter? bodyTemplate = armor.BodyTemplate;
-            if ((IsDeviousRenderedItem(name) && StrMatch(name, "boots")) || 
-                (StrMatch(name, "heels") && !StrMatch(name, "wheel") && 
+            if ((IsDeviousRenderedItem(name) && StrMatch(name, "boots", isPart)) || 
+                (StrMatch(name, "heels", isPart) && !StrMatch(name, "wheel", isPart) && 
                 bodyTemplate != null && bodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Feet)))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_BootsHeels);
             }
             //SLA_VaginalDildo
-            if ((StrMatch(name, "plug") && StrMatch(name, "vag")) || StrMatch(name, "vaginal") || StrMatch(name, "vibrator"))
+            if ((StrMatch(name, "plug", isPart) && StrMatch(name, "vag", isPart)) || StrMatch(name, "vaginal", isPart) || StrMatch(name, "vibrator", isPart))
             {
                 matched = true;
-                if (StrMatch(name, "beads"))
+                if (StrMatch(name, "beads", isPart))
                 {
                     AddTag(armorEditObj, SLA_VaginalBeads);
                 }
@@ -218,14 +237,14 @@ namespace BaboKeywordPatcher
                 }
             }
             // SLA_AnalPlug
-            if (StrMatch(name, "anal") || StrMatch(name, "buttplug") || StrMatch(name, "vibrator"))
+            if (StrMatch(name, "anal", isPart) || StrMatch(name, "buttplug", isPart) || StrMatch(name, "vibrator", isPart))
             {
                 matched = true;
-                if (StrMatch(name, "tail"))
+                if (StrMatch(name, "tail", isPart))
                 {
                     AddTag(armorEditObj, SLA_AnalPlugTail);
                 }
-                else if (StrMatch(name, "beads")) 
+                else if (StrMatch(name, "beads", isPart)) 
                 {
                     AddTag(armorEditObj, SLA_AnalBeads);
                 }
@@ -236,67 +255,67 @@ namespace BaboKeywordPatcher
                 
             }
             // SLA_PiercingClit
-            if (StrMatch(name, "piercingv") || StrMatch(name, "vpiercing"))
+            if (StrMatch(name, "piercingv", isPart) || StrMatch(name, "vpiercing", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_PiercingClit);
             }
             // SLA_PiercingNipple
-            if (StrMatch(name, "piercingn") || StrMatch(name, "npiercing"))
+            if (StrMatch(name, "piercingn", isPart) || StrMatch(name, "npiercing", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_PiercingNipple);
             }
             // SLA_BraArmor
-            if (!StrMatch(name, "bracer") && !StrMatch(name, "brawn") && (StrMatch(name, " bra") || StrMatch(name, "bikini top") || 
-                (StrMatch(name, "undergarment") && StrMatch(name, "upper"))))
+            if (!StrMatch(name, "bracer", isPart) && !StrMatch(name, "brawn", isPart) && (StrMatch(name, "bra", isPart) || StrMatch(name, "bikini top", isPart) || 
+                (StrMatch(name, "undergarment", isPart) && StrMatch(name, "upper", isPart))))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_BraArmor);
             }
-            if (StrMatch(name, "bikini"))
+            if (StrMatch(name, "bikini", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorHalfNakedBikini);
             }
             // SLA_ThongT
-            if (StrMatch(name, "thong") || StrMatch(name, "bottom"))
+            if (StrMatch(name, "thong", isPart) || StrMatch(name, "bottom", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_ThongT);
             }
             //SLA_PantiesNormal
-            if (StrMatch(name, "panties") || StrMatch(name, "panty") || StrMatch(name, "underwear") || StrMatch(name, "binkini bot") || 
-                StrMatch(name, "pants") || (StrMatch(name, "undergarment")  && StrMatch(name, "lower")))
+            if (StrMatch(name, "panties", isPart) || StrMatch(name, "panty", isPart) || StrMatch(name, "underwear", isPart) || StrMatch(name, "binkini bot", isPart) || 
+                StrMatch(name, "pants", isPart) || (StrMatch(name, "undergarment", isPart)  && StrMatch(name, "lower", isPart)))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_PantiesNormal);
             }
             //SLA_HasStockings
-            if (StrMatch(name, "stockings"))
+            if (StrMatch(name, "stockings", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_HasStockings);
             }
             //SLA_HasLeggings
-            if (StrMatch(name, "leggings"))
+            if (StrMatch(name, "leggings", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_HasLeggings);
             }
             //SLA_HasLeggings
-            if (StrMatch(name, "skirt"))
+            if (StrMatch(name, "skirt", isPart))
             {
                 matched = true;
                 AddTag(armorEditObj, SLA_MiniSkirt);
             }
             // All vanilla armors
-            if (Settings.Value.ArmorPrettyDefault && !matched && (StrMatch(name, "armor") || StrMatch(name, "cuiras") || StrMatch(name, "robes")))
+            if (Settings.Value.ArmorPrettyDefault && !matched && (StrMatch(name, "armor", true) || StrMatch(name, "cuiras", true) || StrMatch(name, "robes", true)))
             { // I use a skimpy armor replacer (But not to the level of bikini). Having ArmorPretty on all armors is appropriate.
                 matched = true;
                 AddTag(armorEditObj, SLA_ArmorPretty);
             }
-            else if (Settings.Value.ArmorEroticDefault && !matched && (StrMatch(name, "armor") || StrMatch(name, "cuiras") || StrMatch(name, "robes")))
+            else if (Settings.Value.ArmorEroticDefault && !matched && (StrMatch(name, "armor", true) || StrMatch(name, "cuiras", true) || StrMatch(name, "robes", true)))
             { 
                 matched = true;
                 AddTag(armorEditObj, EroticArmor);
@@ -344,14 +363,14 @@ namespace BaboKeywordPatcher
                         string? v = armorGetter.Name.ToString();
                         if (v != null)
                         {
-                            ParseName(state, armorGetter, v);
+                            ParseName(state, armorGetter, v, false);
                         }
                     }
                     else
                     {
                         if (armorGetter.EditorID != null)
                         {
-                            ParseName(state, armorGetter, armorGetter.EditorID);
+                            ParseName(state, armorGetter, armorGetter.EditorID, true);
                         }
                     }
                 }
