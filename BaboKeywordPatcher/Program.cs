@@ -66,7 +66,7 @@ namespace BaboKeywordPatcher
 
         public static bool IsDeviousRenderedItem(String name)
         {
-            return (StrMatch(name, "scriptinstance", false) || StrMatch(name, "rendered", false));
+            return (StrMatch(name, "scriptinstance", true) || StrMatch(name, "rendered", true));
         }
 
         public static IKeywordGetter? EroticArmor;
