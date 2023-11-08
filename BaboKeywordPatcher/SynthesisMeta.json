@@ -4,5 +4,13 @@
   "OneLineDescription": "",
   "LongDescription": "",
   "PreferredAutoVersioning": "Default",
-  "RequiredMods": []
+  "RequiredMods": [],
+  "TargetedReleases": [
+    "SkyrimLE",
+    "SkyrimSE",
+    "SkyrimVR",
+    "EnderalLE",
+    "EnderalSE",
+    "SkyrimSEGog"
+  ]
 }
